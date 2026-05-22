@@ -2,26 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Timber Optimizer</title>
 
 <style>
 body{
 font-family:Arial,sans-serif;
+background:#f4f4f4;
 padding:20px;
-background:#f5f5f5;
 }
 
 .container{
-max-width:700px;
+max-width:900px;
 margin:auto;
 background:white;
 padding:20px;
-border-radius:10px;
-}
-
-h1,h2{
-text-align:center;
+border-radius:12px;
 }
 
 table{
@@ -38,21 +34,21 @@ text-align:center;
 
 input{
 width:90%;
-padding:10px;
+padding:8px;
 }
 
 button{
 width:100%;
-padding:15px;
-margin-top:10px;
+padding:14px;
 font-size:18px;
+margin-top:10px;
 }
 
 .result{
 background:#eef7ff;
 padding:15px;
-border-radius:10px;
 margin-top:20px;
+border-radius:10px;
 }
 </style>
 </head>
@@ -70,32 +66,6 @@ margin-top:20px;
 <th>Wood Length (ft)</th>
 <th>Quantity</th>
 </tr>
-
-<tr><td>3</td><td><input type="number" value="0"></td></tr>
-<tr><td>3.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>3.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>3.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>4</td><td><input type="number" value="0"></td></tr>
-<tr><td>4.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>4.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>4.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>5</td><td><input type="number" value="0"></td></tr>
-<tr><td>5.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>5.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>5.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>6</td><td><input type="number" value="0"></td></tr>
-<tr><td>6.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>6.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>6.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>7</td><td><input type="number" value="0"></td></tr>
-<tr><td>7.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>7.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>7.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>8</td><td><input type="number" value="0"></td></tr>
-<tr><td>8.25</td><td><input type="number" value="0"></td></tr>
-<tr><td>8.5</td><td><input type="number" value="0"></td></tr>
-<tr><td>8.75</td><td><input type="number" value="0"></td></tr>
-<tr><td>9</td><td><input type="number" value="0"></td></tr>
 </table>
 
 <h2>Order Details</h2>
@@ -107,30 +77,49 @@ margin-top:20px;
 </tr>
 
 <tr>
-<td><input type="number" placeholder="57"></td>
-<td><input type="number" placeholder="3"></td>
+<td><input type="number"></td>
+<td><input type="number"></td>
 </tr>
 </table>
 
 <button onclick="addRow()">+ Add Row</button>
 <button onclick="optimize()">Optimize</button>
 
-<div class="result" id="result">
-Waiting for order...
+<div id="result" class="result">
+Waiting for optimization...
 </div>
 
 </div>
 
 <script>
+
+const stockLengths=[];
+
+for(let ft=3;ft<=9;ft+=0.25){
+stockLengths.push(ft);
+}
+
+const stockTable =
+document.getElementById("stockTable");
+
+stockLengths.forEach(ft=>{
+let row = stockTable.insertRow();
+
+row.innerHTML=
+`
+<td>${ft}</td>
+<td><input type="number" value="0"></td>
+`;
+});
+
 function addRow(){
 
 let table =
 document.getElementById("orderTable");
 
-let row =
-table.insertRow();
+let row = table.insertRow();
 
-row.innerHTML =
+row.innerHTML=
 `
 <td><input type="number"></td>
 <td><input type="number"></td>
@@ -139,78 +128,141 @@ row.innerHTML =
 
 function optimize(){
 
-let rows =
+let pieces=[];
+
+let orderRows =
 document.querySelectorAll("#orderTable tr");
 
-let total = 0;
+for(let i=1;i<orderRows.length;i++){
 
-for(let i=1;i<rows.length;i++){
+let inputs=
+orderRows[i]
+.querySelectorAll("input");
 
-let inputs =
-rows[i].querySelectorAll("input");
-
-let inch =
+let inch=
 parseFloat(inputs[0].value)||0;
 
-let qty =
+let qty=
 parseInt(inputs[1].value)||0;
 
-total += inch * qty;
+for(let q=0;q<qty;q++){
+pieces.push(inch);
+}
 }
 
-let stockRows =
-document.querySelectorAll("#stockTable tr");
+pieces.sort((a,b)=>b-a);
 
-let best = null;
+let stock=[];
+
+let stockRows=
+document.querySelectorAll("#stockTable tr");
 
 for(let i=1;i<stockRows.length;i++){
 
-let qtyInput =
-stockRows[i]
-.querySelector("input");
-
-let qty =
-parseInt(qtyInput.value)||0;
-
-if(qty<=0) continue;
-
-let ft =
+let ft=
 parseFloat(
 stockRows[i].cells[0].innerText
 );
 
-let inches = ft * 12;
+let qty=
+parseInt(
+stockRows[i]
+.querySelector("input").value
+)||0;
 
-if(inches >= total){
+for(let q=0;q<qty;q++){
 
-best = {
+stock.push({
 ft:ft,
-waste:(inches-total)
-};
+inch:ft*12
+});
+}
+}
 
+stock.sort((a,b)=>a.inch-b.inch);
+
+let results=[];
+
+for(let wood of stock){
+
+let current=[];
+let used=0;
+
+for(let i=0;i<pieces.length;i++){
+
+if(
+used + pieces[i]
+<= wood.inch
+){
+
+current.push(
+pieces[i]
+);
+
+used += pieces[i];
+
+pieces[i]=-1;
+}
+}
+
+pieces=
+pieces.filter(x=>x!==-1);
+
+if(current.length){
+
+results.push({
+ft:wood.ft,
+cuts:current,
+waste:
+wood.inch-used
+});
+}
+
+if(!pieces.length){
 break;
 }
 }
 
-if(best){
+if(results.length===0){
 
-document.getElementById("result")
-.innerHTML =
-"Suggested wood length: <b>"
-+ best.ft +
-" ft</b><br>Total order: "
-+ total +
-" inches<br>Wastage: "
-+ best.waste.toFixed(2)
-+ " inches";
-
-}else{
-
-document.getElementById("result")
-.innerHTML =
+document
+.getElementById("result")
+.innerHTML=
 "No suitable stock found";
+
+return;
 }
+
+let html="<h3>Suggested Plans</h3>";
+
+results.forEach((r,index)=>{
+
+html +=
+`
+<p>
+<b>Option ${index+1}</b><br>
+Take <b>${r.ft} ft</b><br>
+Cut: ${r.cuts.join(" + ")}<br>
+Waste: <b>${r.waste}"</b>
+</p>
+<hr>
+`;
+});
+
+if(pieces.length){
+
+html +=
+`<p>
+⚠️ Remaining pieces not fulfilled:
+${pieces.join(", ")}
+</p>`;
 }
+
+document
+.getElementById("result")
+.innerHTML=html;
+}
+
 </script>
 
 </body>
